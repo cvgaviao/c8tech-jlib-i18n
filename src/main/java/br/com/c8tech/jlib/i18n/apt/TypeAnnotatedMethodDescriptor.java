@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt;
+package br.com.c8tech.jlib.i18n.apt;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import javax.lang.model.type.TypeMirror;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
-import br.com.c8tech.javalib.apt.ImmutableTypeAnnotatedMethodDescriptor.Builder;
+import br.com.c8tech.jlib.i18n.apt.ImmutableTypeAnnotatedMethodDescriptor.Builder;
 
 //Make generated class package private
 @Value.Style(visibility = ImplementationVisibility.PACKAGE,

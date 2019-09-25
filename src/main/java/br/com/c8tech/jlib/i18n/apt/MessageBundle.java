@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt.i18n;
+package br.com.c8tech.jlib.i18n.apt;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;

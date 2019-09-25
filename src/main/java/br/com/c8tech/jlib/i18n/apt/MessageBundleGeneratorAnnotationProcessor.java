@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt.i18n;
+package br.com.c8tech.jlib.i18n.apt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,16 +42,13 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeSpec.Builder;
 
-import br.com.c8tech.javalib.apt.AbstractHierarchyAnnotationProcessor;
-import br.com.c8tech.javalib.apt.TypeAnnotatedDescriptor;
-import br.com.c8tech.javalib.apt.TypeAnnotatedMethodDescriptor;
+import br.com.c8tech.jlib.i18n.AbstractMessageBundle;
 
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedOptions({ "Properties.baseName", "Properties.basePath" })
 public class MessageBundleGeneratorAnnotationProcessor extends
         AbstractHierarchyAnnotationProcessor<MessageBundleMethodDescriptor, MessageBundleDescriptor<MessageBundleMethodDescriptor>> {
-
 
     private static final String METHOD_PARAMETERS_REGEX = "(\\{(\\d)\\})";
 
@@ -79,7 +76,7 @@ public class MessageBundleGeneratorAnnotationProcessor extends
         String key = null;
 
         if (pTypeAnnotatedMethodDescriptor.annotationName()
-                .equals("br.com.c8tech.javalib.apt.i18n.Message")) {
+                .equals(Message.class.getCanonicalName())) {
 
             locale = (String) pAnnotationValues.get("locale");
             message = (String) pAnnotationValues.get("value");
@@ -119,7 +116,10 @@ public class MessageBundleGeneratorAnnotationProcessor extends
             MessageBundleDescriptor<MessageBundleMethodDescriptor> pMessageBundleDescriptor) {
 
         Builder classBuilder = TypeSpec
-                .classBuilder(pMessageBundleDescriptor.simpleName())
+                .classBuilder(pMessageBundleDescriptor.simpleName() + "Impl")
+                .superclass(AbstractMessageBundle.class)
+                .addSuperinterface(TypeName
+                        .get(pMessageBundleDescriptor.targetType().asType()))
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         for (MessageBundleMethodDescriptor methodDescriptor : pMessageBundleDescriptor
@@ -142,9 +142,7 @@ public class MessageBundleGeneratorAnnotationProcessor extends
                     .returns(TypeName
                             .get(methodDescriptor.qualifiedReturnType()))
                     .addParameters(parameters)
-                    .addStatement("$T.out.println($S)", System.class,
-                            "Hello, JavaPoet!")
-                    .build();
+                    .addStatement(" return $S", "Hello, JavaPoet!").build();
 
             classBuilder.addMethod(method);
         }
@@ -206,7 +204,7 @@ public class MessageBundleGeneratorAnnotationProcessor extends
             }
 
             FileObject f = processingEnv.getFiler().createResource(
-                    StandardLocation.SOURCE_OUTPUT, "", resourceName,
+                    StandardLocation.CLASS_OUTPUT, "", resourceName,
                     methods.stream().toArray(Element[]::new));
 
             properties.store(f.openOutputStream(),

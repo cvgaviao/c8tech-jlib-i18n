@@ -9,13 +9,12 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt.i18n;
+package br.com.c8tech.jlib.i18n.apt;
 
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
-import br.com.c8tech.javalib.apt.TypeAnnotatedDescriptor;
-import br.com.c8tech.javalib.apt.i18n.ImmutableMessageBundleDescriptor.Builder;
+import br.com.c8tech.jlib.i18n.apt.ImmutableMessageBundleDescriptor.Builder;
 
 @Value.Immutable
 // Make generated class package private

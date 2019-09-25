@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt;
+package br.com.c8tech.jlib.i18n.apt;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -222,8 +222,8 @@ public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotat
 
         TypeElement targetTypeElement = (TypeElement) pTargetElement;
 
-        T info = collectTypeAnnotateDescriptor(targetTypeElement, pAnnotation);
-        if (info != null && !processMessageBundleDescriptor(info)) {
+        T typeDescriptor = collectTypeAnnotateDescriptor(targetTypeElement, pAnnotation);
+        if (typeDescriptor != null && processMessageBundleDescriptor(typeDescriptor)) {
             processed = true;
         } else {
             error("Could not process interface info for type '" + pAnnotation

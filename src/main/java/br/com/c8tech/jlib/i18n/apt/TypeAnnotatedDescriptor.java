@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt;
+package br.com.c8tech.jlib.i18n.apt;
 
 import java.util.Collection;
 
@@ -19,7 +19,7 @@ import javax.lang.model.element.TypeElement;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
-import br.com.c8tech.javalib.apt.ImmutableTypeAnnotatedDescriptor.Builder;
+import br.com.c8tech.jlib.i18n.apt.ImmutableTypeAnnotatedDescriptor.Builder;
 
 //Make generated class package private
 @Value.Style(visibility = ImplementationVisibility.PACKAGE,

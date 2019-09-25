@@ -9,7 +9,7 @@
  *
  * ============================================================================
  */
-package br.com.c8tech.javalib.apt.i18n;
+package br.com.c8tech.jlib.i18n.apt;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,6 +21,8 @@ import org.joor.ReflectException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import br.com.c8tech.jlib.i18n.apt.MessageBundleGeneratorAnnotationProcessor;
+
 public class MessageBundleAnnotationProcessorTest {
 
     @Test
@@ -29,8 +31,8 @@ public class MessageBundleAnnotationProcessorTest {
             throws Exception {
         MessageBundleGeneratorAnnotationProcessor processor = new MessageBundleGeneratorAnnotationProcessor();
         try {
-            Reflect.compile("br.com.c8tech.javalib.apt.i18n.NoInterface",
-                    "package br.com.c8tech.javalib.apt.i18n; "
+            Reflect.compile("br.com.c8tech.jlib.i18n.apt.apt.i18n.NoInterface",
+                    "package br.com.c8tech.jlib.i18n.apt.apt.i18n; "
                             + "@MessageBundle "
                             + "public class SourceClassNOK {"
                             + " private void m() {}" + "}",
@@ -50,8 +52,8 @@ public class MessageBundleAnnotationProcessorTest {
             throws Exception {
         MessageBundleGeneratorAnnotationProcessor processor = new MessageBundleGeneratorAnnotationProcessor();
         Reflect.compile(
-                "br.com.c8tech.javalib.apt.i18n.SourceResourceBundleWithTwoMethods",
-                "package br.com.c8tech.javalib.apt.i18n; " + "@MessageBundle "
+                "br.com.c8tech.jlib.i18n.apt.apt.i18n.SourceResourceBundleWithTwoMethods",
+                "package br.com.c8tech.jlib.i18n.apt.apt.i18n; " + "@MessageBundle "
                         + "public interface SourceResourceBundleWithTwoMethods {"
                         + "@Message(value=\" worked {0} ! \", locale=\"pt-BR\" )"
                         + " public String m1(String pZero);"
@@ -71,8 +73,8 @@ public class MessageBundleAnnotationProcessorTest {
         MessageBundleGeneratorAnnotationProcessor processor = new MessageBundleGeneratorAnnotationProcessor();
         try {
             Reflect.compile(
-                    "br.com.c8tech.javalib.apt.i18n.SourceEmptyResourceBundle",
-                    "package br.com.c8tech.javalib.apt.i18n; "
+                    "br.com.c8tech.jlib.i18n.apt.apt.i18n.SourceEmptyResourceBundle",
+                    "package br.com.c8tech.jlib.i18n.apt.apt.i18n; "
                             + "@MessageBundle " + "@Other "
                             + "public interface SourceEmptyResourceBundle {"
                             + "@Message(\" worked {0} ! \")"
@@ -90,8 +92,8 @@ public class MessageBundleAnnotationProcessorTest {
             throws Exception {
         MessageBundleGeneratorAnnotationProcessor processor = new MessageBundleGeneratorAnnotationProcessor();
         try {
-            Reflect.compile("br.com.c8tech.javalib.apt.i18n.Source7NOK",
-                    "package br.com.c8tech.javalib.apt.i18n; "
+            Reflect.compile("br.com.c8tech.jlib.i18n.apt.apt.i18n.Source7NOK",
+                    "package br.com.c8tech.jlib.i18n.apt.apt.i18n; "
                             + "@MessageBundle " + "public class Source7NOK {"
                             + " void m() {}" + "}",
                     new CompileOptions().options("-source", "7")
