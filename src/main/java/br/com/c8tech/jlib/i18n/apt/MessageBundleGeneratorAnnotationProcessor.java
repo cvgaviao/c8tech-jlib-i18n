@@ -12,6 +12,7 @@
 package br.com.c8tech.jlib.i18n.apt;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,9 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
+
+import org.jooq.lambda.tuple.Tuple;
+import org.jooq.lambda.tuple.Tuple2;
 
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.JavaFile;
@@ -102,8 +106,7 @@ public class MessageBundleGeneratorAnnotationProcessor extends
 
         return MessageBundleDescriptor.builder().propertiesBaseName(basename)
                 .propertiesBasePath(basePath)
-                .classAnnotationElement(
-                        pTypeAnnotatedDescriptor.classAnnotationElement())
+                .annotationClass(pTypeAnnotatedDescriptor.annotationClass())
                 .simpleName(pTypeAnnotatedDescriptor.simpleName())
                 .packageName(pTypeAnnotatedDescriptor.packageName())
                 .qualifiedName(pTypeAnnotatedDescriptor.qualifiedName())
@@ -224,13 +227,13 @@ public class MessageBundleGeneratorAnnotationProcessor extends
     }
 
     @Override
-    protected Set<String> getChildrenAnnotationTypes() {
-        return Set.of(Message.class.getName());
+    protected Set<Tuple2<Class<? extends Annotation>, Class<? extends Annotation>>> getChildrenAnnotationTypes() {
+        return Set.of(Tuple.tuple(Message.class, Messages.class));
     }
 
     @Override
-    protected String getParentAnnotationType() {
-        return MessageBundle.class.getName();
+    protected Class<? extends Annotation> getParentAnnotationType() {
+        return MessageBundle.class;
     }
 
     @Override

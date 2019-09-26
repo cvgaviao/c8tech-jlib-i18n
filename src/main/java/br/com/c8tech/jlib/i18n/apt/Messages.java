@@ -14,30 +14,16 @@ package br.com.c8tech.jlib.i18n.apt;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 @Retention(SOURCE)
 @Target(METHOD)
-@Repeatable(Messages.class)
-public @interface Message {
+public @interface Messages {
 
     /**
      * 
-     * @return An optional key for the message.
+     * @return Hold multiple message templates.
      */
-    String key() default "";
-
-    /**
-     * 
-     * @return A required message template.
-     */
-    String value();
-
-    /**
-     * 
-     * @return The default locale of this message.
-     */
-    String locale() default "en-US";
+    Message[] value();
 }

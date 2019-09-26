@@ -13,17 +13,20 @@ package br.com.c8tech.jlib.i18n.apt;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -31,6 +34,10 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+
+import org.jooq.lambda.tuple.Tuple2;
+
+import br.com.c8tech.jlib.i18n.AnnotationProcessException;
 
 public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotatedMethodDescriptor, T extends TypeAnnotatedDescriptor<M>>
         extends AbstractProcessor {
@@ -40,82 +47,115 @@ public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotat
         return Set.of(ElementKind.INTERFACE, ElementKind.CLASS);
     }
 
-    private Set<M> collectMethodAnnotatedDescriptor(
-            ExecutableElement pMethodElement) {
+    private Optional<Map<? extends ExecutableElement, ? extends AnnotationValue>> filterMethodAnnotations(
+            ExecutableElement pMethodElement,
+            Class<? extends Annotation> pAnnotation) {
+
+        TypeElement anType = processingEnv.getElementUtils()
+                .getTypeElement(pAnnotation.getCanonicalName());
+
+        return pMethodElement.getAnnotationMirrors().stream().filter(
+                a -> a.getAnnotationType().toString().equals(anType.toString()))
+                .findFirst().map(ann -> processingEnv.getElementUtils()
+                        .getElementValuesWithDefaults(ann));
+    }
+
+    private Set<M> collectMethodDescriptorsForAnnotationContainer(
+            ExecutableElement pMethodElement,
+            Class<? extends Annotation> pContainerAnnotation,
+            Class<? extends Annotation> pAnnotation) {
+        Set<M> descriptorsPerAnnotation = new HashSet<>();
+
+        Optional<AnnotationValue> rawValueOpt = filterMethodAnnotations(
+                pMethodElement, pContainerAnnotation)
+                        .flatMap(a -> a.values().stream().findFirst());
+        if (rawValueOpt.isPresent()
+                && rawValueOpt.get().getValue() instanceof List) {
+
+            List<AnnotationValue> anns = ((List<?>) rawValueOpt.get()
+                    .getValue())
+                            .stream()
+                            .filter(o -> AnnotationValue.class
+                                    .isAssignableFrom(o.getClass()))
+                            .map(o -> (AnnotationValue) o)
+                            .collect(Collectors.toList());
+
+            anns.stream()
+                    .forEach(ann -> descriptorsPerAnnotation
+                            .add(extractMethodDescriptors(pMethodElement, ann,
+                                    pAnnotation)));
+
+        }
+        return descriptorsPerAnnotation;
+    }
+
+    private M extractMethodDescriptors(ExecutableElement pMethodElement,
+            AnnotationValue pAnnotationValue,
+            Class<? extends Annotation> pAnnotation) {
+
+        Map<? extends ExecutableElement, ? extends AnnotationValue> rawValuesOpt = processingEnv
+                .getElementUtils().getElementValuesWithDefaults(
+                        (AnnotationMirror) pAnnotationValue.getValue());
+
+        Map<String, Object> values = rawValuesOpt.entrySet().stream()
+                .collect(Collectors.toMap(
+                        ek -> ek.getKey().getSimpleName().toString(),
+                        ev -> ev.getValue().getValue(), (a, b) -> a,
+                        TreeMap::new));
+
+        return createMethodAnnotatedDescriptor(values,
+                TypeAnnotatedMethodDescriptor.builder()
+                        .annotationName(pAnnotation.getCanonicalName())
+                        .methodElement(pMethodElement)
+                        .name(pMethodElement.getSimpleName().toString())
+                        .qualifiedReturnType(pMethodElement.getReturnType())
+                        .qualifiedParameterTypes(pMethodElement.getParameters())
+                        .build());
+    }
+
+    private Set<M> collectMethodDescriptorForAnnotation(
+            ExecutableElement pMethodElement,
+            Class<? extends Annotation> pAnnotation) {
 
         Set<M> descriptorsPerAnnotation = new HashSet<>(1);
 
-        processingEnv.getElementUtils().getAllAnnotationMirrors(pMethodElement)
-                .stream()
-                // bring only those who are tagged by one of those children
-                // annotations
-                .filter(ann -> getChildrenAnnotationTypes()
-                        .contains(ann.getAnnotationType().toString()))
-                .forEach(annotation -> {
-
-                    Map<String, Object> values = processingEnv.getElementUtils()
-                            .getElementValuesWithDefaults(annotation).entrySet()
-                            .stream()
-                            .collect(Collectors.toMap(
-                                    ek -> ek.getKey().getSimpleName()
-                                            .toString(),
-                                    ev -> ev.getValue().getValue(), (a, b) -> a,
-                                    TreeMap::new));
-
-                    String name = pMethodElement.getSimpleName().toString();
-
-                    M descr = createMethodAnnotatedDescriptor(values,
-                            TypeAnnotatedMethodDescriptor.builder()
-                                    .annotationName(annotation
-                                            .getAnnotationType().toString())
-                                    .methodElement(pMethodElement)
-                                    .name(name)
-                                    .qualifiedReturnType(
-                                            pMethodElement.getReturnType())
-                                    .qualifiedParameterTypes(
-                                            pMethodElement.getParameters())
-                                    .build());
-                    if (descr != null
-                            && isValidCandidate(descr, pMethodElement)) {
-                        descriptorsPerAnnotation.add(descr);
-                    }
-                });
-
+        Optional<Map<? extends ExecutableElement, ? extends AnnotationValue>> rawValuesOpt = filterMethodAnnotations(
+                pMethodElement, pAnnotation);
+        if (rawValuesOpt.isPresent()) {
+            Map<String, Object> values = rawValuesOpt.get().entrySet().stream()
+                    .collect(Collectors.toMap(
+                            ek -> ek.getKey().getSimpleName().toString(),
+                            ev -> ev.getValue().getValue(), (a, b) -> a,
+                            TreeMap::new));
+            M methodDescr = createMethodAnnotatedDescriptor(values,
+                    TypeAnnotatedMethodDescriptor.builder()
+                            .annotationName(pAnnotation.getCanonicalName())
+                            .methodElement(pMethodElement)
+                            .name(pMethodElement.getSimpleName().toString())
+                            .qualifiedReturnType(pMethodElement.getReturnType())
+                            .qualifiedParameterTypes(
+                                    pMethodElement.getParameters())
+                            .build());
+            descriptorsPerAnnotation.add(methodDescr);
+        }
         return descriptorsPerAnnotation;
 
     }
 
     private T collectTypeAnnotateDescriptor(TypeElement pTargetElement,
-            Element pClassAnnotationElement) {
-
-        if (!isTargetValid(pTargetElement)) {
-            return null;
-        }
+            Class<? extends Annotation> pAnnotationClass,
+            Set<M> pMethodDescriptors) {
 
         String packageName = ((PackageElement) pTargetElement
                 .getEnclosingElement()).getQualifiedName().toString();
         String qualifiedName = pTargetElement.getQualifiedName().toString();
         String simpleName = pTargetElement.getSimpleName().toString();
-        List<M> methodInfos = new ArrayList<>();
-
-        for (Element method : pTargetElement.getEnclosedElements()) {
-            if (method instanceof ExecutableElement) {
-                Set<M> methodDescriptors = collectMethodAnnotatedDescriptor(
-                        (ExecutableElement) method);
-                if (!methodDescriptors.isEmpty()) {
-                    methodInfos.addAll(methodDescriptors);
-                } else {
-                    return null;
-                }
-            }
-        }
 
         return createTypeAnnotatedDescriptor(TypeAnnotatedDescriptor
-                .<M> builder().classAnnotationElement(pClassAnnotationElement)
-                .packageName(packageName).qualifiedName(qualifiedName)
-                .simpleName(simpleName).methodDescriptors(methodInfos)
+                .<M> builder().annotationClass(pAnnotationClass)
+                .methodDescriptors(pMethodDescriptors).packageName(packageName)
+                .qualifiedName(qualifiedName).simpleName(simpleName)
                 .targetType(pTargetElement).build());
-
     }
 
     protected abstract M createMethodAnnotatedDescriptor(
@@ -159,13 +199,13 @@ public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotat
         return false;
     }
 
-    protected abstract Set<String> getChildrenAnnotationTypes();
+    protected abstract Set<Tuple2<Class<? extends Annotation>, Class<? extends Annotation>>> getChildrenAnnotationTypes();
 
-    protected abstract String getParentAnnotationType();
+    protected abstract Class<? extends Annotation> getParentAnnotationType();
 
     @Override
     public final Set<String> getSupportedAnnotationTypes() {
-        String parentAnnotation = getParentAnnotationType();
+        String parentAnnotation = getParentAnnotationType().getCanonicalName();
         boolean initialized = isInitialized();
         if (parentAnnotation == null) {
             if (initialized)
@@ -190,7 +230,7 @@ public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotat
         return processed;
     }
 
-    public boolean isTargetValid(TypeElement pTypeElement) {
+    public boolean isTargetTypeElementValid(TypeElement pTypeElement) {
 
         if (!allowedTypeKinds().contains(pTypeElement.getKind())) {
             error("The annotation '" + getParentAnnotationType()
@@ -206,31 +246,53 @@ public abstract class AbstractHierarchyAnnotationProcessor<M extends TypeAnnotat
 
     @Override
     public boolean process(Set<? extends TypeElement> pAnnotations,
-            RoundEnvironment pRoundEnvironment) {
+            final RoundEnvironment pRoundEnvironment) {
 
-        pAnnotations.stream().findFirst().ifPresent(annotation -> {
-            for (Element targetElement : pRoundEnvironment
-                    .getElementsAnnotatedWith(annotation)) {
-                processTargetElement(targetElement, annotation);
+        Set<M> methodDescriptors = new HashSet<>();
+
+        getChildrenAnnotationTypes().stream().forEach(t -> {
+            // deal with the annotation container (for repetitions)
+            if (t.v2 != null) {
+                Set<M> md2 = pRoundEnvironment.getElementsAnnotatedWith(t.v2)
+                        .stream().filter(e -> e instanceof ExecutableElement)
+                        .flatMap(
+                                e -> collectMethodDescriptorsForAnnotationContainer(
+                                        (ExecutableElement) e, t.v2, t.v1)
+                                                .stream())
+                        .collect(Collectors.toSet());
+                methodDescriptors.addAll(md2);
             }
+
+            // deal with annotations that have no repetitions
+            Set<M> md1 = pRoundEnvironment.getElementsAnnotatedWith(t.v1)
+                    .stream().filter(e -> e instanceof ExecutableElement)
+                    .flatMap(e -> collectMethodDescriptorForAnnotation(
+                            (ExecutableElement) e, t.v1).stream())
+                    .collect(Collectors.toSet());
+            methodDescriptors.addAll(md1);
+
         });
-        return isProcessed();
-    }
 
-    private void processTargetElement(Element pTargetElement,
-            TypeElement pAnnotation) {
+        // start processing the elements tagged with the parent
+        // annotation
+        Set<? extends Element> rootElements = pRoundEnvironment
+                .getElementsAnnotatedWith(getParentAnnotationType());
+        for (Element targetElement : rootElements) {
 
-        TypeElement targetTypeElement = (TypeElement) pTargetElement;
-
-        T typeDescriptor = collectTypeAnnotateDescriptor(targetTypeElement, pAnnotation);
-        if (typeDescriptor != null && processMessageBundleDescriptor(typeDescriptor)) {
-            processed = true;
-        } else {
-            error("Could not process interface info for type '" + pAnnotation
-                    + "'!", targetTypeElement);
-            processed = false;
+            if (!(targetElement instanceof TypeElement)
+                    || !isTargetTypeElementValid((TypeElement) targetElement)) {
+                throw new AnnotationProcessException();
+            }
+            T typeDescriptor = collectTypeAnnotateDescriptor(
+                    (TypeElement) targetElement, getParentAnnotationType(),
+                    methodDescriptors);
+            if (typeDescriptor == null) {
+                error("An error have occurred while processing the element tagged with annotation '"
+                        + getParentAnnotationType().getCanonicalName() + "'!",
+                        targetElement);
+            }
         }
-
+        return isProcessed();
     }
 
     protected abstract boolean processMessageBundleDescriptor(T interfaceInfo);

@@ -11,9 +11,9 @@
  */
 package br.com.c8tech.jlib.i18n.apt;
 
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import org.immutables.value.Value;
@@ -31,7 +31,7 @@ public interface TypeAnnotatedDescriptor<M extends TypeAnnotatedMethodDescriptor
         return ImmutableTypeAnnotatedDescriptor.builder();
     }
 
-    Element classAnnotationElement();
+    Class<? extends Annotation> annotationClass();
 
     String packageName();
 
