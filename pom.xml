@@ -1,30 +1,14 @@
-
-<!-- ============================================================================ -->
-<!--  Copyright ©  2015-2019,    Cristiano V. Gavião			                  -->
-<!--                                                                              -->
-<!--  All rights reserved.                                                        -->
-<!--  This program and the accompanying materials are made available under        -->
-<!--  the terms of the Eclipse Public License v1.0 which accompanies this         -->
-<!--  distribution and is available at http://www.eclipse.org/legal/epl-v10.html  -->
-<!--                                                                              -->
-<!-- ============================================================================ -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
 
     <groupId>br.com.c8tech.jlib</groupId>
-    <artifactId>c8tech-jlib-i18n-apt</artifactId>
+    <artifactId>c8tech-jlib-i18n-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
-        <google.auto-service.version>1.0-rc6</google.auto-service.version>
-        <javapoet.version>1.11.1</javapoet.version>
-        <joor.version>0.9.12</joor.version>
-        <jooy.version>0.9.14</jooy.version>
-        <junit.version>5.5.1</junit.version>
-        <org.immutables.version>2.8.0</org.immutables.version>
         <assertj.version>3.13.2</assertj.version>
         <maven-compiler.version>3.8.1</maven-compiler.version>
         <maven-failsafe.version>3.0.0-M3</maven-failsafe.version>
@@ -32,9 +16,15 @@
         <!-- Encoding settings -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
+        <jooy.version>0.9.14</jooy.version>
+        <junit.version>5.5.1</junit.version>
+        <org.immutables.version>2.8.0</org.immutables.version>
     </properties>
 
+    <modules>
+        <module>c8tech-jlib-i18n</module>
+        <module>c8tech-jlib-i18n-apt</module>
+    </modules>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -46,25 +36,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jool</artifactId>
-            <version>${jooy.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.serverpeon.testing.compile</groupId>
-            <artifactId>compile-testing-extension</artifactId>
-            <scope>test</scope>
-            <version>1.0.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -80,29 +52,6 @@
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-            <version>${joor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.immutables</groupId>
-            <artifactId>value</artifactId>
-            <version>${org.immutables.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>${google.auto-service.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup</groupId>
-            <artifactId>javapoet</artifactId>
-            <version>${javapoet.version}</version>
         </dependency>
     </dependencies>
 
